@@ -199,7 +199,7 @@ def reconstruct(nodes: Iterable[Node]):
     return root
 
 
-if __name__ == "__main__":
+def main():
     invocation_map = {
         'jsonmason-nodedump': lambda n: n,
         'jsonmason-jsdump': lambda n: n.assignment
@@ -218,3 +218,7 @@ if __name__ == "__main__":
             exit(f"Failed {failed} out of {total} tests.")
         else:
             print(f"Passed {total} tests.", file=stderr)
+
+
+if __name__ == "__main__":
+    main()
