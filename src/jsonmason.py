@@ -53,12 +53,12 @@ A full roundtrip of deserialized JSON results in a semantically identical struct
 
 Adding an inline transformation makes things more interesting:
 
->>> reconstruct(map(lambda node: Node(node.path, node.value * 2, node.is_leaf) if node.is_leaf else node, deconstruct(my_deserialized_json)))
+>>> reconstruct(map(lambda node: node.clone(value = node.value * 2) if node.is_leaf else node, deconstruct(my_deserialized_json)))
 [68, {'hello': [['aa', 'bb'], ['cc', 'dd']], 'world': 84}]
 """
 
 from functools import reduce, partial
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from collections.abc import Sequence, Mapping
 from typing import Union, List, Dict, Tuple, Any, Iterable
 from sys import argv as sysargv, stdin, stderr
@@ -71,7 +71,9 @@ _CONTAINER_MAP = {List: list, Dict: dict}
 @dataclass
 class Node:
     path: Tuple
-    """Full path to the node"""
+    """Full logical path to the node"""
+    containerpath: Tuple = field(repr=False, compare=False)
+    """References to enveloping containers"""
     value: Any
     """The value at the path"""
     is_leaf: bool
@@ -99,6 +101,28 @@ class Node:
             ''.join(f'[{jsondumps(item)}]' for item in self.itempath),
             stringulate(self.value)
         )
+
+    @property
+    def container(self):
+        """
+        The containing container. Useful for getting sibling items without going through traverse().
+        """
+        try:
+            return self.containerpath[-1]
+        except IndexError:
+            return  # root node
+
+    def clone(self, **kwargs):
+        """
+        Return a copy, optionally replacing one or more field values
+        """
+        me = dict(
+            path=self.path,
+            containerpath=self.containerpath,
+            value=self.value,
+            is_leaf=self.is_leaf,
+        )
+        return Node(**{**me, **kwargs})
 
 
 def traverse(container, path):
@@ -132,7 +156,7 @@ def assign_at(container, path, value):
     return container
 
 
-def _node_gen(path: Tuple, branch_or_leaf):
+def _node_gen(path: Tuple, containerpath: Tuple, branch_or_leaf):
 
     def descend_typetest(entity):
         for choice in (str, List, Dict, Sequence, Mapping):
@@ -141,11 +165,11 @@ def _node_gen(path: Tuple, branch_or_leaf):
 
     def gen_leaf():
         # Terminate, yield a leaf node
-        yield Node(path, branch_or_leaf, True)
+        yield Node(path, containerpath, branch_or_leaf, True)
 
     def gen_from_container(containerclass: Union[Dict, List]):
         # Descend into container types
-        yield Node(path, containerclass, not branch_or_leaf)
+        yield Node(path, containerpath, containerclass, not branch_or_leaf)
 
         def expand(branch_or_leaf):
             if containerclass == List:
@@ -153,9 +177,10 @@ def _node_gen(path: Tuple, branch_or_leaf):
             if containerclass == Dict:
                 return branch_or_leaf.items()
 
-        containerpath = path + (containerclass,)
+        containerpath_logical = path + (containerclass,)
+        containerpath_refs = containerpath + (branch_or_leaf,)
         for subscript, item in expand(branch_or_leaf):
-            yield from _node_gen(containerpath + (subscript,), item)
+            yield from _node_gen(containerpath_logical + (subscript,), containerpath_refs, item)
 
     gen_as_list = partial(gen_from_container, List)
     gen_as_dict = partial(gen_from_container, Dict)
@@ -176,7 +201,7 @@ def deconstruct(thejson: Union[Dict, List]):
     """
     Yields path nodes through nested container types, depth-first, emitting ``Node`` objects.
     """
-    yield from _node_gen((), thejson)
+    yield from _node_gen((), (), thejson)
 
 
 def reconstruct(nodes: Iterable[Node]):
@@ -211,7 +236,7 @@ def main():
                 print(stringgetter(n), flush=True)
         except (BrokenPipeError, KeyboardInterrupt):
             stderr.close()
-    except KeyError:
+    except (KeyError, TypeError):
         import doctest
         failed, total = doctest.testmod()
         if failed:

@@ -67,6 +67,10 @@ Functions
 :   Yields path nodes through nested container types, depth-first, emitting ``Node`` objects.
 
     
+`main()`
+:   
+
+    
 `reconstruct(nodes: Iterable[jsonmason.Node])`
 :   Reconstruct an object from its ``Node`` components (as acquired from deconstruct()).
 
@@ -84,8 +88,8 @@ Functions
 Classes
 -------
 
-`Node(path: Tuple, value: Any, is_leaf: bool)`
-:   Node(path: Tuple, value: Any, is_leaf: bool)
+`Node(path: Tuple, refpath: Tuple, value: Any, is_leaf: bool)`
+:   Node(path: Tuple, refpath: Tuple, value: Any, is_leaf: bool)
 
     ### Class variables
 
@@ -93,7 +97,10 @@ Classes
     :   Informational: Whether the value is a leaf value
 
     `path: Tuple`
-    :   Full path to the node
+    :   Full logical path to the node
+
+    `refpath: Tuple`
+    :   References to enveloping containers
 
     `value: Any`
     :   The value at the path
@@ -103,5 +110,13 @@ Classes
     `assignment`
     :   A string expressing the assignment, JS-style
 
+    `container`
+    :   The containing container. Useful for getting sibling items without going through traverse().
+
     `itempath`
     :   The path, devoid of container types
+
+    ### Methods
+
+    `clone(self, **kwargs)`
+    :   Return a copy, optionally replacing one or more field values
