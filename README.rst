@@ -1,5 +1,5 @@
-Module jsonmason
-================
+Module libjsonmason
+===================
 What
 ----
 
@@ -52,14 +52,14 @@ A full roundtrip of deserialized JSON results in a semantically identical struct
 
 Adding an inline transformation makes things more interesting:
 
->>> reconstruct(map(lambda node: Node(node.path, node.value * 2, node.is_leaf) if node.is_leaf else node, deconstruct(my_deserialized_json)))
+>>> reconstruct(map(lambda node: node.clone(value = node.value * 2) if node.is_leaf else node, deconstruct(my_deserialized_json)))
 [68, {'hello': [['aa', 'bb'], ['cc', 'dd']], 'world': 84}]
 
 Functions
 ---------
 
     
-`assign_at(container, path, value)`
+`assign_at(container, path, value, container_mapping={typing.List: <class 'list'>, typing.Dict: <class 'dict'>})`
 :   Assign ``value`` at ``path`` in ``container``
 
     
@@ -67,11 +67,7 @@ Functions
 :   Yields path nodes through nested container types, depth-first, emitting ``Node`` objects.
 
     
-`main()`
-:   
-
-    
-`reconstruct(nodes: Iterable[jsonmason.Node])`
+`reconstruct(nodes: Iterable[libjsonmason.Node], container_mapping={typing.List: <class 'list'>, typing.Dict: <class 'dict'>})`
 :   Reconstruct an object from its ``Node`` components (as acquired from deconstruct()).
 
     
@@ -88,19 +84,19 @@ Functions
 Classes
 -------
 
-`Node(path: Tuple, refpath: Tuple, value: Any, is_leaf: bool)`
-:   Node(path: Tuple, refpath: Tuple, value: Any, is_leaf: bool)
+`Node(path: Tuple, containerpath: Tuple, value: Any, is_leaf: bool)`
+:   Node(path: Tuple, containerpath: Tuple, value: Any, is_leaf: bool)
 
     ### Class variables
+
+    `containerpath: Tuple`
+    :   References to enveloping containers
 
     `is_leaf: bool`
     :   Informational: Whether the value is a leaf value
 
     `path: Tuple`
     :   Full logical path to the node
-
-    `refpath: Tuple`
-    :   References to enveloping containers
 
     `value: Any`
     :   The value at the path

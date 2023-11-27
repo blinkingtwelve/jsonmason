@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 What
 ----
@@ -57,15 +56,14 @@ Adding an inline transformation makes things more interesting:
 [68, {'hello': [['aa', 'bb'], ['cc', 'dd']], 'world': 84}]
 """
 
+
 from functools import reduce, partial
 from dataclasses import dataclass, field
 from collections.abc import Sequence, Mapping
 from typing import Union, List, Dict, Tuple, Any, Iterable
-from sys import argv as sysargv, stdin, stderr
-from pathlib import Path
-from json import load as jsonload, dumps as jsondumps
+from json import dumps as jsondumps
 
-_CONTAINER_MAP = {List: list, Dict: dict}
+CONTAINER_MAP = {List: list, Dict: dict}
 
 
 @dataclass
@@ -84,7 +82,7 @@ class Node:
         """
         The path, devoid of container types
         """
-        return tuple(filter(lambda el: el not in _CONTAINER_MAP, self.path))
+        return tuple(filter(lambda el: el not in CONTAINER_MAP, self.path))
 
     @property
     def assignment(self):
@@ -142,13 +140,13 @@ def traverse(container, path):
         raise ValueError("Invalid path for container")
 
 
-def assign_at(container, path, value):
+def assign_at(container, path, value, container_mapping=CONTAINER_MAP):
     """
     Assign ``value`` at ``path`` in ``container``
     """
     *into_container_path, where = path
     assign_to = traverse(container, into_container_path)
-    assign_what = _CONTAINER_MAP.get(value, lambda: value)()
+    assign_what = container_mapping.get(value, lambda: value)()
     if isinstance(assign_to, List):
         assign_to.append(assign_what)
     elif isinstance(assign_to, Dict):
@@ -204,7 +202,7 @@ def deconstruct(thejson: Union[Dict, List]):
     yield from _node_gen((), (), thejson)
 
 
-def reconstruct(nodes: Iterable[Node]):
+def reconstruct(nodes: Iterable[Node], container_mapping=CONTAINER_MAP):
     """
     Reconstruct an object from its ``Node`` components (as acquired from deconstruct()).
     """
@@ -212,38 +210,13 @@ def reconstruct(nodes: Iterable[Node]):
         n = next(nodes)
         if n.path:
             raise ValueError("Root node should have empty path.")
-        root = _CONTAINER_MAP[n.value]()
+        root = container_mapping[n.value]()
     except KeyError:
         raise ValueError("Root node is not a list or dict.")
     except StopIteration:
         return  # no nodes in, no result out.
 
     for n in nodes:
-        assign_at(root, n.itempath, n.value)
+        assign_at(root, n.itempath, n.value, container_mapping=container_mapping)
 
     return root
-
-
-def main():
-    invocation_map = {
-        'jsonmason-nodedump': lambda n: n,
-        'jsonmason-jsdump': lambda n: n.assignment
-    }
-    try:
-        stringgetter = invocation_map[Path(sysargv[0]).name]
-        try:
-            for n in deconstruct(jsonload(stdin)):
-                print(stringgetter(n), flush=True)
-        except (BrokenPipeError, KeyboardInterrupt):
-            stderr.close()
-    except (KeyError, TypeError):
-        import doctest
-        failed, total = doctest.testmod()
-        if failed:
-            exit(f"Failed {failed} out of {total} tests.")
-        else:
-            print(f"Passed {total} tests.", file=stderr)
-
-
-if __name__ == "__main__":
-    main()
