@@ -1,11 +1,13 @@
 """
-libjsonmason: Deconstruct and reconstruct container types.
+# libjsonmason: Deconstruct and reconstruct container types.
+
 Any nested container type inheriting from ``Sequence`` or ``Mapping`` is supported for deconstruction.
 However, any such sequence or mapping will be squashed to a list or a dict, respectively; those are the only ones supported
 in JSON.
 Thus deserialized JSON in particular will survive a roundtrip through deconstruction and reconstruction; the resulting structure
 will be a semantically identical copy of the original.
 
+## Example
 The following deconstruction example shows the intermediary format:
 
 >>> my_deserialized_json = [34, {"hello": [["a", "b"], ["c", "d"]], "world": 42}]
