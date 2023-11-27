@@ -1,30 +1,5 @@
 """
-What
-----
-
-A utility for transforming an object into an editable stream, and reconstructing an object from that stream.
-To be precise:
-
-* Transform an an object of acyclic nested collections into an iterable of assignment operations (deconstruction)
-* Create an object of acyclic nested collections from an iterable of assignment operations (reconstruction)
-
-Why
----
-Deconstructing only to reconstruct does not seem very useful in itself. The power is in operating on the intermediary format — the iterable of nodes
-lends itself well to pattern matching, transformations, and other forms of computation.
-
-How
----
-In the shell
-^^^^^^^^^^^^
-If you've installed this package (eg ``pip install jsonmason``), then you should have two executables on your ``$PATH``. Both accept JSON on standard input, and print the deconstruction of that JSON on standard output.
-
-* ``jsonmason-nodedump`` makes it easy to ``grep`` for patterns - this is a bit like `gron <https://github.com/tomnomnom/gron>`_, but is intended to make it easy to find patterns for creating transformations in your Python code.
-* ``jsonmason-jsdump`` is even more like `gron <https://github.com/tomnomnom/gron>`_, as it prints JS-style assignments that can be pasted straight into a JS console.
-
-
-In Python code
-^^^^^^^^^^^^^^
+libjsonmason: Deconstruct and reconstruct container types.
 Any nested container type inheriting from ``Sequence`` or ``Mapping`` is supported for deconstruction.
 However, any such sequence or mapping will be squashed to a list or a dict, respectively; those are the only ones supported
 in JSON.

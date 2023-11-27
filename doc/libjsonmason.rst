@@ -1,5 +1,4 @@
-Module libjsonmason
-===================
+
 What
 ----
 
@@ -22,6 +21,7 @@ If you've installed this package (eg ``pip install jsonmason``), then you should
 
 * ``jsonmason-nodedump`` makes it easy to ``grep`` for patterns - this is a bit like `gron <https://github.com/tomnomnom/gron>`_, but is intended to make it easy to find patterns for creating transformations in your Python code.
 * ``jsonmason-jsdump`` is even more like `gron <https://github.com/tomnomnom/gron>`_, as it prints JS-style assignments that can be pasted straight into a JS console.
+
 
 In Python code
 ^^^^^^^^^^^^^^
@@ -54,65 +54,3 @@ Adding an inline transformation makes things more interesting:
 
 >>> reconstruct(map(lambda node: node.clone(value = node.value * 2) if node.is_leaf else node, deconstruct(my_deserialized_json)))
 [68, {'hello': [['aa', 'bb'], ['cc', 'dd']], 'world': 84}]
-
-Functions
----------
-
-    
-`assign_at(container, path, value, container_mapping={typing.List: <class 'list'>, typing.Dict: <class 'dict'>})`
-:   Assign ``value`` at ``path`` in ``container``
-
-    
-`deconstruct(thejson: Union[Dict, List])`
-:   Yields path nodes through nested container types, depth-first, emitting ``Node`` objects.
-
-    
-`reconstruct(nodes: Iterable[libjsonmason.Node], container_mapping={typing.List: <class 'list'>, typing.Dict: <class 'dict'>})`
-:   Reconstruct an object from its ``Node`` components (as acquired from deconstruct()).
-
-    
-`traverse(container, path)`
-:   Return the node at ``path`` in the nested ``container``
-    
-    >>> traverse([34, {'hello': [['a', 'b'], ['c', 'd']], 'world': 42}], [0])
-    34
-    >>> traverse([34, {'hello': [['a', 'b'], ['c', 'd']], 'world': 42}], [1, 'world'])
-    42
-    >>> traverse([34, {'hello': [['a', 'b'], ['c', 'd']], 'world': 42}], [1, 'hello', 1, 0])
-    'c'
-
-Classes
--------
-
-`Node(path: Tuple, containerpath: Tuple, value: Any, is_leaf: bool)`
-:   Node(path: Tuple, containerpath: Tuple, value: Any, is_leaf: bool)
-
-    ### Class variables
-
-    `containerpath: Tuple`
-    :   References to enveloping containers
-
-    `is_leaf: bool`
-    :   Informational: Whether the value is a leaf value
-
-    `path: Tuple`
-    :   Full logical path to the node
-
-    `value: Any`
-    :   The value at the path
-
-    ### Instance variables
-
-    `assignment`
-    :   A string expressing the assignment, JS-style
-
-    `container`
-    :   The containing container. Useful for getting sibling items without going through traverse().
-
-    `itempath`
-    :   The path, devoid of container types
-
-    ### Methods
-
-    `clone(self, **kwargs)`
-    :   Return a copy, optionally replacing one or more field values

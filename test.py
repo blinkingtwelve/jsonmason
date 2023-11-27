@@ -5,8 +5,12 @@ from sys import stderr
 
 def test():
     import doctest
-    from src.jsonmason import libjsonmason
-    failed, total = doctest.testmod(libjsonmason)
+    from src.jsonmason import libjsonmason, attrdict
+    failed, total = 0, 0
+    for lib in (libjsonmason, attrdict):
+        libfailed, libtotal = doctest.testmod(lib)
+        failed += libfailed
+        total += libtotal
     if failed:
         exit(f"Failed {failed} out of {total} tests.")
     else:
